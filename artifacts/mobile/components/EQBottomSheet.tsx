@@ -5,12 +5,12 @@ import {
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Feather } from "@expo/vector-icons";
@@ -19,7 +19,8 @@ import { useAudio, EQBands } from "@/context/AudioContext";
 import { VerticalSlider } from "./VerticalSlider";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-const SHEET_HEIGHT = SCREEN_HEIGHT * 0.6;
+const SHEET_HEIGHT = SCREEN_HEIGHT * 0.62;
+const HORIZONTAL_MARGIN = 14;
 
 interface EQBottomSheetProps {
   visible: boolean;
@@ -39,7 +40,7 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
   const insets = useSafeAreaInsets();
   const { eq, setEQ, volume, setVolume, boost, setBoost, saveSettings } =
     useAudio();
-  const slideAnim = useRef(new Animated.Value(SHEET_HEIGHT)).current;
+  const slideAnim = useRef(new Animated.Value(SHEET_HEIGHT + 60)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const [localEQ, setLocalEQ] = useState<EQBands>(eq);
@@ -56,20 +57,20 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
         Animated.spring(slideAnim, {
           toValue: 0,
           useNativeDriver: true,
-          tension: 80,
-          friction: 12,
+          tension: 70,
+          friction: 14,
         }),
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 200,
+          duration: 220,
           useNativeDriver: true,
         }),
       ]).start();
     } else {
       Animated.parallel([
         Animated.timing(slideAnim, {
-          toValue: SHEET_HEIGHT,
-          duration: 280,
+          toValue: SHEET_HEIGHT + 60,
+          duration: 300,
           useNativeDriver: true,
         }),
         Animated.timing(fadeAnim, {
@@ -106,6 +107,10 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
   };
 
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
+  const sheetBottom = Platform.OS === "web" ? 28 : 20 + (insets.bottom > 0 ? 0 : 8);
+
+  const boostColor =
+    localBoost > 0.6 ? "#ff9500" : localBoost > 0.3 ? "#ffcc00" : colors.primary;
 
   return (
     <Modal
@@ -116,133 +121,139 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
       statusBarTranslucent
     >
       <TouchableWithoutFeedback onPress={onClose}>
-        <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]} />
+        <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
+          <BlurView
+            intensity={55}
+            tint="dark"
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
       </TouchableWithoutFeedback>
 
       <Animated.View
         style={[
-          styles.sheet,
+          styles.sheetWrapper,
           {
-            height: SHEET_HEIGHT + bottomPad + 20,
-            backgroundColor: colors.card,
+            bottom: sheetBottom,
             transform: [{ translateY: slideAnim }],
-            paddingBottom: bottomPad + 20,
           },
         ]}
       >
-        <View style={styles.handle} />
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: colors.card,
+              paddingBottom: bottomPad + 12,
+            },
+          ]}
+        >
+          <View style={styles.handle} />
 
-        <View style={styles.header}>
-          <View>
-            <Text style={[styles.title, { color: colors.foreground }]}>
-              Volume & EQ
-            </Text>
-            <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-              {getLowPassLabel()}
-            </Text>
-          </View>
-          <Pressable
-            onPress={onClose}
-            style={[styles.closeBtn, { backgroundColor: colors.muted }]}
-          >
-            <Feather name="x" size={16} color={colors.mutedForeground} />
-          </Pressable>
-        </View>
-
-        <View style={styles.slidersRow}>
-          {EQ_BANDS.map(({ key, label }) => (
-            <VerticalSlider
-              key={key}
-              value={localEQ[key]}
-              onChange={(val) => handleBandChange(key, val)}
-              label={label}
-              highlighted={highlightedBand === key}
-              height={160}
-              width={48}
-            />
-          ))}
-        </View>
-
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-        <View style={styles.bottomControls}>
-          <View style={styles.controlRow}>
-            <Text style={[styles.controlLabel, { color: colors.mutedForeground }]}>
-              Volume
-            </Text>
-            <Text style={[styles.controlValue, { color: colors.foreground }]}>
-              {Math.round(localVolume * 100)}%
-            </Text>
-          </View>
-          <View style={[styles.hSliderTrack, { backgroundColor: colors.muted }]}>
+          <View style={styles.header}>
+            <View>
+              <Text style={[styles.title, { color: colors.foreground }]}>
+                Volume & EQ
+              </Text>
+              <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+                {getLowPassLabel()}
+              </Text>
+            </View>
             <Pressable
-              style={StyleSheet.absoluteFill}
-              onPress={(e) => {
-                const { locationX, nativeEvent } = e;
-                const trackWidth =
-                  typeof nativeEvent.target === "number" ? 280 : 280;
-                const val = Math.max(0, Math.min(1, locationX / trackWidth));
-                setLocalVolume(val);
-              }}
+              onPress={onClose}
+              style={[styles.closeBtn, { backgroundColor: colors.secondary }]}
             >
+              <Feather name="x" size={16} color={colors.mutedForeground} />
+            </Pressable>
+          </View>
+
+          <View style={styles.slidersRow}>
+            {EQ_BANDS.map(({ key, label }) => (
+              <VerticalSlider
+                key={key}
+                value={localEQ[key]}
+                onChange={(val) => handleBandChange(key, val)}
+                label={label}
+                highlighted={highlightedBand === key}
+                height={155}
+                width={46}
+              />
+            ))}
+          </View>
+
+          <View style={[styles.divider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.sliderSection}>
+            <View style={styles.sliderHeader}>
+              <Text style={[styles.sliderLabel, { color: colors.mutedForeground }]}>
+                VOLUME
+              </Text>
+              <Text style={[styles.sliderValue, { color: colors.foreground }]}>
+                {Math.round(localVolume * 100)}%
+              </Text>
+            </View>
+            <View style={[styles.hTrack, { backgroundColor: colors.muted }]}>
               <View
                 style={[
-                  styles.hSliderFill,
+                  styles.hFill,
                   {
                     width: `${localVolume * 100}%`,
                     backgroundColor: colors.primary,
                   },
                 ]}
               />
-            </Pressable>
-          </View>
+              <Pressable
+                style={StyleSheet.absoluteFill}
+                onPress={(e) => {
+                  const val = Math.max(0, Math.min(1, e.nativeEvent.locationX / 280));
+                  setLocalVolume(val);
+                }}
+              />
+            </View>
 
-          <View style={styles.controlRow}>
-            <Text style={[styles.controlLabel, { color: colors.mutedForeground }]}>
-              Boost
-            </Text>
-            <Text style={[styles.controlValue, { color: colors.foreground }]}>
-              {Math.round(localBoost * 100)}%
-            </Text>
-          </View>
-          <View style={[styles.hSliderTrack, { backgroundColor: colors.muted }]}>
-            <Pressable
-              style={StyleSheet.absoluteFill}
-              onPress={(e) => {
-                const { locationX } = e;
-                const val = Math.max(0, Math.min(1, locationX / 280));
-                setLocalBoost(val);
-              }}
-            >
+            <View style={[styles.sliderHeader, { marginTop: 14 }]}>
+              <Text style={[styles.sliderLabel, { color: colors.mutedForeground }]}>
+                BOOST
+              </Text>
+              <Text style={[styles.sliderValue, { color: boostColor }]}>
+                {Math.round(localBoost * 100)}%
+              </Text>
+            </View>
+            <View style={[styles.hTrack, { backgroundColor: colors.muted }]}>
               <View
                 style={[
-                  styles.hSliderFill,
+                  styles.hFill,
                   {
                     width: `${localBoost * 100}%`,
-                    backgroundColor:
-                      localBoost > 0.6
-                        ? "#ff9500"
-                        : localBoost > 0.3
-                          ? "#ffcc00"
-                          : colors.primary,
+                    backgroundColor: boostColor,
                   },
                 ]}
               />
-            </Pressable>
+              <Pressable
+                style={StyleSheet.absoluteFill}
+                onPress={(e) => {
+                  const val = Math.max(0, Math.min(1, e.nativeEvent.locationX / 280));
+                  setLocalBoost(val);
+                }}
+              />
+            </View>
           </View>
-        </View>
 
-        <Pressable
-          onPress={handleSave}
-          style={({ pressed }) => [
-            styles.saveBtn,
-            { backgroundColor: colors.foreground, opacity: pressed ? 0.85 : 1 },
-          ]}
-        >
-          <Text style={[styles.saveBtnText, { color: colors.background }]}>
-            Save changes
-          </Text>
-        </Pressable>
+          <Pressable
+            onPress={handleSave}
+            style={({ pressed }) => [
+              styles.saveBtn,
+              {
+                backgroundColor: colors.foreground,
+                opacity: pressed ? 0.82 : 1,
+              },
+            ]}
+          >
+            <Text style={[styles.saveBtnText, { color: colors.background }]}>
+              Save changes
+            </Text>
+          </Pressable>
+        </View>
       </Animated.View>
     </Modal>
   );
@@ -251,20 +262,25 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.6)",
+    backgroundColor: "transparent",
+  },
+  sheetWrapper: {
+    position: "absolute",
+    left: HORIZONTAL_MARGIN,
+    right: HORIZONTAL_MARGIN,
   },
   sheet: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 24,
-    paddingTop: 12,
+    borderRadius: 28,
+    paddingHorizontal: 22,
+    paddingTop: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.5,
+    shadowRadius: 40,
+    shadowOffset: { width: 0, height: -8 },
+    elevation: 24,
   },
   handle: {
-    width: 40,
+    width: 36,
     height: 4,
     borderRadius: 2,
     backgroundColor: "#555",
@@ -275,7 +291,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    marginBottom: 28,
+    marginBottom: 24,
   },
   title: {
     fontSize: 22,
@@ -298,44 +314,41 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "flex-end",
-    marginBottom: 20,
+    marginBottom: 22,
   },
   divider: {
     height: 1,
-    marginBottom: 16,
+    marginBottom: 18,
   },
-  bottomControls: {
-    gap: 8,
+  sliderSection: {
     marginBottom: 20,
   },
-  controlRow: {
+  sliderHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    marginBottom: 8,
   },
-  controlLabel: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    letterSpacing: 0.5,
-    textTransform: "uppercase",
-  },
-  controlValue: {
-    fontSize: 12,
+  sliderLabel: {
+    fontSize: 11,
     fontFamily: "Inter_600SemiBold",
+    letterSpacing: 1.2,
   },
-  hSliderTrack: {
-    height: 6,
-    borderRadius: 3,
+  sliderValue: {
+    fontSize: 12,
+    fontFamily: "Inter_700Bold",
+  },
+  hTrack: {
+    height: 7,
+    borderRadius: 4,
     overflow: "hidden",
-    marginBottom: 4,
   },
-  hSliderFill: {
+  hFill: {
     height: "100%",
-    borderRadius: 3,
+    borderRadius: 4,
   },
   saveBtn: {
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 16,
+    paddingVertical: 17,
     alignItems: "center",
   },
   saveBtnText: {
