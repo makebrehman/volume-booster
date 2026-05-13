@@ -16,6 +16,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useColors } from "@/hooks/useColors";
 import { useAudio } from "@/context/AudioContext";
+import {
+  requestNotificationPermission,
+  showBoostNotification,
+  dismissBoostNotification,
+} from "@/utils/notifications";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.48;
@@ -140,6 +145,10 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
   const [localBoost, setLocalBoost] = useState(boost / 100);
 
   useEffect(() => {
+    requestNotificationPermission();
+  }, []);
+
+  useEffect(() => {
     if (visible) {
       setLocalVolume(volume / 100);
       setLocalBoost(boost / 100);
@@ -180,9 +189,15 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
   };
 
   const handleBoostChange = (val: number) => {
+    const pct = Math.round(val * 100);
     setLocalBoost(val);
-    setBoost(Math.round(val * 100));
-    saveSettings({ boost: Math.round(val * 100) });
+    setBoost(pct);
+    saveSettings({ boost: pct });
+    if (pct > 0) {
+      showBoostNotification(pct);
+    } else {
+      dismissBoostNotification();
+    }
   };
 
   const boostPct = Math.round(localBoost * 100);
