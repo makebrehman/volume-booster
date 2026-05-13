@@ -5,8 +5,8 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
-    "userInterfaceStyle": "automatic",
+    "scheme": "loudify",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/icon.png",
@@ -14,9 +14,39 @@
       "backgroundColor": "#0d0d0d"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.makebrehman.loudify",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Loudify uses audio session management to apply volume boost.",
+        "UIBackgroundModes": ["audio"]
+      }
     },
-    "android": {},
+    "android": {
+      "package": "com.makebrehman.loudify",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0d0d0d"
+      },
+      "permissions": [
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.VIBRATE",
+        "android.permission.INTERNET",
+        "android.permission.RECEIVE_BOOT_COMPLETED"
+      ],
+      "googleServicesFile": "./google-services.json",
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
+    },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
@@ -34,10 +64,23 @@
         {
           "icon": "./assets/images/icon.png",
           "color": "#ff3b30",
-          "defaultChannel": "loudify"
+          "defaultChannel": "loudify",
+          "sounds": []
         }
       ]
     ],
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_YOUR_EAS_PROJECT_ID"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/REPLACE_WITH_YOUR_EAS_PROJECT_ID",
+      "enabled": false
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
