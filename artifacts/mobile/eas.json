@@ -7,33 +7,36 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "node": "20.18.0",
       "android": {
-        "gradleCommand": ":app:assembleDebug"
+        "gradleCommand": ":app:assembleDebug",
+        "image": "latest"
       },
       "env": {
-        "APP_ENV": "development",
-        "npm_config_frozen_lockfile": "false"
+        "APP_ENV": "development"
       }
     },
     "preview": {
       "distribution": "internal",
+      "node": "20.18.0",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "image": "latest"
       },
       "env": {
-        "APP_ENV": "preview",
-        "npm_config_frozen_lockfile": "false"
+        "APP_ENV": "preview"
       }
     },
     "production": {
       "distribution": "store",
+      "node": "20.18.0",
       "android": {
-        "buildType": "app-bundle"
+        "buildType": "app-bundle",
+        "image": "latest"
       },
       "autoIncrement": true,
       "env": {
-        "APP_ENV": "production",
-        "npm_config_frozen_lockfile": "false"
+        "APP_ENV": "production"
       }
     }
   },
