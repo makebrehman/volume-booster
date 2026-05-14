@@ -8,7 +8,7 @@
     "build": "node scripts/build.js",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "eas-build-pre-install": "cd /home/expo/workingdir/build && pnpm install --no-frozen-lockfile"
+    "eas-build-pre-install": "rm /home/expo/workingdir/build/pnpm-workspace.yaml 2>/dev/null; rm /home/expo/workingdir/build/pnpm-lock.yaml 2>/dev/null; true"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
