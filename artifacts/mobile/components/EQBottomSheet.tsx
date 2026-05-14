@@ -14,6 +14,7 @@ import {
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import { BannerAd, BannerAdSize, TestIds } from "react-native-google-mobile-ads";
 import { useColors } from "@/hooks/useColors";
 import { useAudio } from "@/context/AudioContext";
 import {
@@ -21,6 +22,12 @@ import {
   showBoostNotification,
   dismissBoostNotification,
 } from "@/utils/notifications";
+
+// TODO: Replace TEST ad unit ID with your real AdMob Banner Ad Unit ID from admob.google.com
+// Format: ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
+const BANNER_AD_UNIT_ID = __DEV__
+  ? TestIds.BANNER
+  : "ca-app-pub-3940256099942544/6300978111";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.48;
@@ -291,10 +298,12 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
             />
           </View>
 
-          <View style={[styles.adBox, { backgroundColor: colors.secondary }]}>
-            <Text style={[styles.adLabel, { color: colors.mutedForeground }]}>
-              Advertisement
-            </Text>
+          <View style={styles.adBox}>
+            <BannerAd
+              unitId={BANNER_AD_UNIT_ID}
+              size={BannerAdSize.BANNER}
+              requestOptions={{ requestNonPersonalizedAdsOnly: false }}
+            />
           </View>
         </View>
       </Animated.View>
@@ -381,15 +390,10 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   adBox: {
-    height: 72,
-    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 4,
-  },
-  adLabel: {
-    fontSize: 11,
-    fontFamily: "Poppins_400Regular",
-    letterSpacing: 0.5,
+    overflow: "hidden",
+    borderRadius: 10,
   },
 });
