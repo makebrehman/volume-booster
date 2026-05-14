@@ -1,7 +1,8 @@
 {
   "cli": {
     "version": ">= 16.0.0",
-    "promptToConfigurePushNotifications": false
+    "promptToConfigurePushNotifications": false,
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -13,7 +14,8 @@
         "image": "latest"
       },
       "env": {
-        "APP_ENV": "development"
+        "APP_ENV": "development",
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
       }
     },
     "preview": {
@@ -24,7 +26,8 @@
         "image": "latest"
       },
       "env": {
-        "APP_ENV": "preview"
+        "APP_ENV": "preview",
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
       }
     },
     "production": {
@@ -36,7 +39,8 @@
       },
       "autoIncrement": true,
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
       }
     }
   },

@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Loudify - Volume Booster",
-    "slug": "mobile",
+    "slug": "volume-booster-loudify",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
