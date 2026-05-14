@@ -11,7 +11,8 @@
         "gradleCommand": ":app:assembleDebug"
       },
       "env": {
-        "APP_ENV": "development"
+        "APP_ENV": "development",
+        "npm_config_frozen_lockfile": "false"
       }
     },
     "preview": {
@@ -20,7 +21,8 @@
         "buildType": "apk"
       },
       "env": {
-        "APP_ENV": "preview"
+        "APP_ENV": "preview",
+        "npm_config_frozen_lockfile": "false"
       }
     },
     "production": {
@@ -30,7 +32,8 @@
       },
       "autoIncrement": true,
       "env": {
-        "APP_ENV": "production"
+        "APP_ENV": "production",
+        "npm_config_frozen_lockfile": "false"
       }
     }
   },
