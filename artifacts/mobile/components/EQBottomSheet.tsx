@@ -23,11 +23,9 @@ import {
   dismissBoostNotification,
 } from "@/utils/notifications";
 
-// TODO: Replace TEST ad unit ID with your real AdMob Banner Ad Unit ID from admob.google.com
-// Format: ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX
 const BANNER_AD_UNIT_ID = __DEV__
   ? TestIds.BANNER
-  : "ca-app-pub-3940256099942544/6300978111";
+  : "ca-app-pub-3275201470124796/2503416589";
 
 const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
 const SHEET_HEIGHT = SCREEN_HEIGHT * 0.48;
