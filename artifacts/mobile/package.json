@@ -8,7 +8,7 @@
     "build": "node scripts/build.js",
     "serve": "node server/serve.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "eas-build-pre-install": "cp /home/expo/workingdir/build/artifacts/mobile/.yarnrc /home/expo/workingdir/build/.yarnrc 2>/dev/null; rm /home/expo/workingdir/build/pnpm-workspace.yaml 2>/dev/null; rm /home/expo/workingdir/build/pnpm-lock.yaml 2>/dev/null; true"
+    "eas-build-pre-install": "cp /home/expo/workingdir/build/artifacts/mobile/.yarnrc /home/expo/workingdir/build/.yarnrc 2>/dev/null; rm /home/expo/workingdir/build/pnpm-workspace.yaml 2>/dev/null; rm /home/expo/workingdir/build/pnpm-lock.yaml 2>/dev/null; [ -n \"$GOOGLE_SERVICE_ACCOUNT_JSON\" ] && echo \"$GOOGLE_SERVICE_ACCOUNT_JSON\" > /home/expo/workingdir/build/artifacts/mobile/google-service-account.json || true"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
