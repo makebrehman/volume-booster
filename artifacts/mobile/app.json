@@ -36,7 +36,8 @@
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
         "android.permission.VIBRATE",
         "android.permission.INTERNET",
-        "android.permission.RECEIVE_BOOT_COMPLETED"
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.SYSTEM_ALERT_WINDOW"
       ],
       "blockedPermissions": [
         "android.permission.RECORD_AUDIO",
@@ -50,6 +51,7 @@
       "favicon": "./assets/images/icon.png"
     },
     "plugins": [
+      "./plugins/withTransparentActivity",
       [
         "expo-router",
         {

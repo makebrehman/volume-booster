@@ -17,6 +17,7 @@ A minimal, premium Android/iOS volume booster utility app built with React Nativ
 - Fonts: Poppins (UI) + Inter (system)
 - Notifications: expo-notifications
 - Blur: expo-blur
+- Volume control: react-native-volume-manager (real device system volume)
 - State: React Context + AsyncStorage
 - Build: EAS Build (Expo Application Services)
 - API: Express 5
@@ -25,9 +26,10 @@ A minimal, premium Android/iOS volume booster utility app built with React Nativ
 ## Where things live
 
 - `artifacts/mobile/` — Expo mobile app (the main product)
-  - `app/(tabs)/index.tsx` — entry screen (auto-opens bottom sheet)
-  - `components/EQBottomSheet.tsx` — the entire UI (floating volume control sheet)
+  - `app/(tabs)/index.tsx` — entry screen (transparent background, auto-opens bottom sheet)
+  - `components/EQBottomSheet.tsx` — the entire UI (floating volume control sheet, 44px touch sliders)
   - `components/VerticalSlider.tsx` — custom vertical slider (currently unused, kept for reference)
+  - `plugins/withTransparentActivity.js` — Expo config plugin that makes the Android activity translucent
   - `context/AudioContext.tsx` — global audio state (volume, boost, device, active)
   - `utils/notifications.ts` — system notification helpers
   - `eas.json` — EAS build profiles (development / preview APK / production AAB)

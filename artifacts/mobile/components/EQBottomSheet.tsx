@@ -3,7 +3,6 @@ import {
   Animated,
   Dimensions,
   Modal,
-  PanResponder,
   Platform,
   Pressable,
   StyleSheet,
@@ -32,6 +31,10 @@ const SHEET_HEIGHT = SCREEN_HEIGHT * 0.48;
 const HORIZONTAL_MARGIN = 14;
 const SLIDER_TRACK_WIDTH = SCREEN_WIDTH - HORIZONTAL_MARGIN * 2 - 44;
 
+const SLIDER_TOUCH_HEIGHT = 44;
+const SLIDER_TRACK_DEFAULT = 18;
+const SLIDER_TRACK_ACTIVE = 26;
+
 interface EQBottomSheetProps {
   visible: boolean;
   onClose: () => void;
@@ -45,11 +48,10 @@ interface AnimatedSliderProps {
 }
 
 function AnimatedSlider({ value, onChange, color, trackColor }: AnimatedSliderProps) {
-  const trackHeight = useRef(new Animated.Value(8)).current;
-  const borderRadius = useRef(new Animated.Value(4)).current;
+  const trackHeight = useRef(new Animated.Value(SLIDER_TRACK_DEFAULT)).current;
+  const borderRadius = useRef(new Animated.Value(SLIDER_TRACK_DEFAULT / 2)).current;
   const currentVal = useRef(value);
   const trackRef = useRef<View>(null);
-  const trackX = useRef(0);
 
   useEffect(() => {
     currentVal.current = value;
@@ -57,84 +59,86 @@ function AnimatedSlider({ value, onChange, color, trackColor }: AnimatedSliderPr
 
   const expand = () => {
     Animated.spring(trackHeight, {
-      toValue: 22,
+      toValue: SLIDER_TRACK_ACTIVE,
       useNativeDriver: false,
-      tension: 200,
+      tension: 220,
       friction: 10,
     }).start();
     Animated.spring(borderRadius, {
-      toValue: 11,
+      toValue: SLIDER_TRACK_ACTIVE / 2,
       useNativeDriver: false,
-      tension: 200,
+      tension: 220,
       friction: 10,
     }).start();
   };
 
   const shrink = () => {
     Animated.spring(trackHeight, {
-      toValue: 8,
+      toValue: SLIDER_TRACK_DEFAULT,
       useNativeDriver: false,
       tension: 160,
       friction: 12,
     }).start();
     Animated.spring(borderRadius, {
-      toValue: 4,
+      toValue: SLIDER_TRACK_DEFAULT / 2,
       useNativeDriver: false,
       tension: 160,
       friction: 12,
     }).start();
   };
 
-  const panResponder = PanResponder.create({
-    onStartShouldSetPanResponder: () => true,
-    onMoveShouldSetPanResponder: () => true,
-    onPanResponderGrant: (e) => {
-      expand();
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      const x = e.nativeEvent.locationX;
-      const raw = x / SLIDER_TRACK_WIDTH;
-      const clamped = Math.max(0, Math.min(1, raw));
-      currentVal.current = clamped;
-      onChange(clamped);
-    },
-    onPanResponderMove: (e) => {
-      const x = e.nativeEvent.locationX;
-      const raw = x / SLIDER_TRACK_WIDTH;
-      const clamped = Math.max(0, Math.min(1, raw));
-      currentVal.current = clamped;
-      onChange(clamped);
-    },
-    onPanResponderRelease: () => {
-      shrink();
-      Haptics.selectionAsync();
-    },
-  });
+  const handleTouch = (locationX: number) => {
+    const raw = locationX / SLIDER_TRACK_WIDTH;
+    const clamped = Math.max(0, Math.min(1, raw));
+    currentVal.current = clamped;
+    onChange(clamped);
+  };
 
   const fillWidth = `${Math.round(value * 100)}%` as any;
 
   return (
-    <Animated.View
-      style={[
-        styles.sliderTrack,
-        {
-          height: trackHeight,
-          borderRadius,
-          backgroundColor: trackColor,
-        },
-      ]}
-      {...panResponder.panHandlers}
+    <View
+      style={styles.sliderTouchZone}
+      onStartShouldSetResponder={() => true}
+      onMoveShouldSetResponder={() => true}
+      onResponderGrant={(e) => {
+        expand();
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        handleTouch(e.nativeEvent.locationX);
+      }}
+      onResponderMove={(e) => {
+        handleTouch(e.nativeEvent.locationX);
+      }}
+      onResponderRelease={() => {
+        shrink();
+        Haptics.selectionAsync();
+      }}
+      onResponderTerminate={() => {
+        shrink();
+      }}
     >
       <Animated.View
         style={[
-          styles.sliderFill,
+          styles.sliderTrack,
           {
-            width: fillWidth,
+            height: trackHeight,
             borderRadius,
-            backgroundColor: color,
+            backgroundColor: trackColor,
           },
         ]}
-      />
-    </Animated.View>
+      >
+        <Animated.View
+          style={[
+            styles.sliderFill,
+            {
+              width: fillWidth,
+              borderRadius,
+              backgroundColor: color,
+            },
+          ]}
+        />
+      </Animated.View>
+    </View>
   );
 }
 
@@ -189,8 +193,9 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
 
   const handleVolumeChange = (val: number) => {
     setLocalVolume(val);
-    setVolume(Math.round(val * 100));
-    saveSettings({ volume: Math.round(val * 100) });
+    const pct = Math.round(val * 100);
+    setVolume(pct);
+    saveSettings({ volume: pct });
   };
 
   const handleBoostChange = (val: number) => {
@@ -224,7 +229,7 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]}>
           <BlurView
-            intensity={50}
+            intensity={60}
             tint="dark"
             style={StyleSheet.absoluteFill}
           />
@@ -312,7 +317,7 @@ export function EQBottomSheet({ visible, onClose }: EQBottomSheetProps) {
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(0,0,0,0.45)",
   },
   sheetWrapper: {
     position: "absolute",
@@ -364,13 +369,13 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   sliderBlock: {
-    marginBottom: 26,
+    marginBottom: 22,
   },
   sliderRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   sliderLabel: {
     fontSize: 11,
@@ -381,8 +386,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "Poppins_700Bold",
   },
+  sliderTouchZone: {
+    height: SLIDER_TOUCH_HEIGHT,
+    justifyContent: "center",
+    width: "100%",
+  },
   sliderTrack: {
     overflow: "hidden",
+    width: "100%",
   },
   sliderFill: {
     height: "100%",
