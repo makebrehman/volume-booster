@@ -52,6 +52,7 @@
     },
     "plugins": [
       "./plugins/withTransparentActivity",
+      "./plugins/withLoudnessEnhancer",
       [
         "expo-router",
         {

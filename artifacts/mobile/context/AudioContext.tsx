@@ -4,9 +4,11 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { Platform } from "react-native";
+import { applyBoost, releaseBoost } from "@/utils/loudnessEnhancer";
 
 let VolumeManager: any = null;
 if (Platform.OS !== "web") {
@@ -62,12 +64,14 @@ const STORAGE_KEY = "@loudify_settings";
 async function applyDeviceVolume(volumePct: number) {
   if (!VolumeManager || Platform.OS === "web") return;
   try {
-    await VolumeManager.setVolume(volumePct / 100, { type: "music" });
+    await VolumeManager.setVolume(volumePct / 100, { type: "music", showUI: false });
   } catch {}
 }
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AudioState>(defaultState);
+  const volumeListenerRef = useRef<any>(null);
+  const ignoreHardwareRef = useRef(false);
 
   useEffect(() => {
     (async () => {
@@ -75,14 +79,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
           const saved = JSON.parse(raw) as Partial<AudioState>;
-          setState((prev) => ({ ...prev, ...saved, isActive: false }));
+          const restored = { ...defaultState, ...saved, isActive: false };
+          setState(restored);
+          await applyBoost(restored.boost);
         }
       } catch {}
 
       if (VolumeManager && Platform.OS !== "web") {
         try {
           const result = await VolumeManager.getVolume("music");
-          const currentVol = typeof result === "number" ? result : result?.volume ?? 0.65;
+          const currentVol =
+            typeof result === "number" ? result : result?.volume ?? 0.65;
           setState((prev) => ({
             ...prev,
             volume: Math.round(currentVol * 100),
@@ -90,6 +97,30 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         } catch {}
       }
     })();
+
+    if (VolumeManager && Platform.OS !== "web") {
+      volumeListenerRef.current = VolumeManager.addVolumeListener(
+        (result: { volume: number }) => {
+          if (ignoreHardwareRef.current) return;
+          const pct = Math.round(result.volume * 100);
+          setState((prev) => ({ ...prev, volume: pct }));
+          AsyncStorage.getItem(STORAGE_KEY)
+            .then((raw) => {
+              const base = raw ? JSON.parse(raw) : {};
+              return AsyncStorage.setItem(
+                STORAGE_KEY,
+                JSON.stringify({ ...base, volume: pct })
+              );
+            })
+            .catch(() => {});
+        }
+      );
+    }
+
+    return () => {
+      volumeListenerRef.current?.remove?.();
+      releaseBoost();
+    };
   }, []);
 
   const saveSettings = useCallback(
@@ -106,21 +137,17 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
 
   const setVolume = useCallback((val: number) => {
     setState((prev) => ({ ...prev, volume: val }));
-    applyDeviceVolume(val);
+    ignoreHardwareRef.current = true;
+    applyDeviceVolume(val).finally(() => {
+      setTimeout(() => {
+        ignoreHardwareRef.current = false;
+      }, 300);
+    });
   }, []);
 
   const setBoost = useCallback((val: number) => {
     setState((prev) => ({ ...prev, boost: val }));
-    /*
-     * BOOST NOTE:
-     * Real audio amplification beyond system max requires Android's
-     * LoudnessEnhancer (android.media.audiofx.LoudnessEnhancer) applied to
-     * an AudioTrack session. This needs a custom native Expo config plugin or
-     * bare workflow with native Java/Kotlin code. The UI value is stored and
-     * ready — the native bridge is the missing piece.
-     *
-     * When boost > 0, we raise system volume to maximum as a partial measure.
-     */
+    applyBoost(val);
     if (val > 0) {
       applyDeviceVolume(100);
     }
